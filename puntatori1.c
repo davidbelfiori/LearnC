@@ -1,12 +1,12 @@
-//
-// Created by davidjulianbelfiori on 04/03/26.
-//
-#include <stdio.h>
+#include  <stdio.h>
 
-int *x;
-double *y;
-void function(void){
-    x = y;
-    if ( x+1 == y+1 ) return 1; // Tale predicato non è mai verificato!!!
-    return 0;
+int main () {
+    int *a ;
+    int b;
+    b = 10;
+    // a = b; errore non posso assegnare un puntatore ad un numero
+    printf("%p\n", &b);
+
+    a=&b;
+    printf("%d",*a);
 }
