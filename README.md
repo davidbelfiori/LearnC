@@ -1,2 +1,3 @@
-Learn C form the base
+
 # LearnC
+Repo playground per Sistemi Operativi 
