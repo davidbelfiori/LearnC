@@ -1,4 +1,4 @@
-/*
++èààà/*
 *Scrivi un programma che crea un processo figlio.
 Il figlio deve sostituire la propria immagine in memoria
 con il comando di sistema ls -l utilizzando una funzione della famiglia exec (ad esempio execlp o execvp).
