@@ -13,8 +13,6 @@ int main(int argc, char *argv[]) {
 
     int a;
 
-
-
     while (1) {
         printf("ciao sono il padre con pid %d , inserisci un valore intero:",getpid());
         if (scanf("%d",&a) != 1) {
