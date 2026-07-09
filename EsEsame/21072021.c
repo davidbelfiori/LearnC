@@ -73,7 +73,7 @@ int main ( int argc , char *argv[]) {
 
     if (sigaction(SIGINT,&sa,NULL) == -1) messaggio("errore nell impostazione della sigaction");
 
-    int fdSorgente = open(nomeFile,O_RDWR | O_CREAT | O_APPEND|O_TRUNC,0666);
+    int fdSorgente = open(nomeFile,O_RDWR | O_CREAT|O_TRUNC,0666);
     if (fdSorgente <0) messaggio("Errore nell'apertura del file");
 
     char bufferInput[1024];
@@ -140,6 +140,7 @@ int main ( int argc , char *argv[]) {
                 write(fdSorgente,bufferInput,byteRead);
             }else if(byteRead <0) {
                 if (errno == EINTR) {
+                    //segale;
                     continue;
                 }else {
                     messaggio("errore nella write");

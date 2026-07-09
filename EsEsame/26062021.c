@@ -90,6 +90,8 @@ int main(int argc, char *argv[]) {
         int byteRead = 0 ;
         while (( byteRead = read(0,buff,sizeof(buff)))>0) {
                 write(padreFd,buff,byteRead);
+            //forzo la scrittura;
+            fsync(padreFd);
             sem_post(syncSem);
         } ;
 
