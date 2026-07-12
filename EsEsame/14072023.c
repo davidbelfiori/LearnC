@@ -79,8 +79,6 @@ void messaggio(char *msg) {
         byteRead += r;
     }
 
-    //consumo i residui
-    while (getchar()!='\n'){};
     //dico che ho scritto qualcosa
     datiProdotti[info->id]=1;
     //sblocco il mutex
