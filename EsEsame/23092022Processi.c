@@ -83,6 +83,7 @@ int main(int argc , char *argv[]) {
                     close(connettori[j][1]);
                     close(connettori[j][0]);
                 }
+
             }
             //gestione dei segnali
             struct sigaction sa;

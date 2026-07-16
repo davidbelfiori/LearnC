@@ -899,7 +899,387 @@
 
   \;
 
+  <subsubsection*|esame 20-01-2020>
+
+  <\question*>
+    <label|docs-internal-guid-1cc83bb1-7fff-0396-ec16-4b5ea1b2ebbf>Descrivere
+    le caratteristiche salienti del virtual-file-system Unix. Si consideri
+    inoltre uno senario dove un processo P apra un file F (attualmente non in
+    uso da parte di alcun processo) e poi esegua 2 fork(), indicare il numero
+    delle sessioni di I/O verso il file F a valle dell'esecuzione delle 2
+    fork() da parte di P.
+  </question*>
+
+  Il vfs è uno strato del sistema operativo che ci permette di dialogare con
+  dispoisitivi di diverso tipo utilizzando sempre le stesse system call.
+
+  Nel vfs unix l'unita minimale è un file , tutto in unix è rappresentabile e
+  gestibile come un file.
+
+  il vfs ci astrae con le operazioni generiche le operazioni reali che
+  effettuano i driver sul dispositivo , un dirver quindi non è altro che un
+  set di funzioni che dialogalogano con il dispositivo , se dobbiamo
+  comunicare con una socket nella tabella intermedia ci sarà anche il
+  puntatore a funzione del driver associato alle socket , oltre che il
+  puntatore all'inode cache.
+
+  i file risiedono in delle directory che a loro volta sono file , una
+  directory quindi è un contenitore di associazioni tra nomi di file e i loro
+  i-node( record di sistema).
+
+  un inode è un record di sistema ovvero , dove vengono mantenute le
+  informazioni del file tra cui:
+
+  <\itemize>
+    <item>tipo di inode directory file , pipe , socket
+
+    <item>UID E GUID : codici identificativi del prorpietario e del suo
+    gruppo\ 
+
+    <item>rwx rxw rwx una tripletta di permessi che simboleggiano i permessi
+    del propietario del suo gruppo e di altri\ 
+
+    <item>suid e sgid che se settati permettono temporamente quado si
+    utilizza il file di ottenere i permessi del prioprietario o del suo
+    gruppo.
+
+    <item>sticky bit nel caso il file sia una directory lo sticky bit ci dice
+    se solo il propietario può eliminare una directory.
+  </itemize>
+
+  il vfs unix utilizza anche le acl , l'uso di esse permette di definire a
+  grana fine i permessi per uno specifico utente , una acl è iniserita in un
+  file shadow che a sua volta è contenuto con i metadati e gli indirizzi dei
+  blocci in un i-node shadow , dentro all'inode è presente un puntatore
+  all'inodeshadow\ 
+
+  eseguendo aprendo un file ed eseguendo due fork le sessioni attive verso F
+  è solo 1,
+
+  <\question>
+    <with|font-series|bold|<label|docs-internal-guid-acb70891-7fff-f8cc-40e9-bb6813774274>Descrivere
+    l'algoritmo ottimo per la sostituzione delle pagine in ambiente di
+    memoria virtuale.>
+  </question>
+
+  l'algoritmo ottimo per la sostituizione delle pagine è il metro di
+  riferimento quando si analizzano gli altri come fifo lru o orologio ,
+  questo algoritmo non è però realizzabile in quanto , al momento della
+  scelta della pagina vittima, sceglie la pagina che gli servirà più in la
+  con il tempo , rendendo impossibile l'implementazione in quanto non
+  possiamo guardare nel futuro e sapere cosa farà la nostra applicazione.
+
+  Per evidenziare la bontà di un algoritmo si utilizza come metrica la
+  frequenza di page fault avvenuti,l'algoritmo ottimo setta la standard.
+  l'algoritmo ottimo non soffre dell'anomalia di belady in quanto
+  all'aumentare dei frame disponibili la frequenza di page fault diminuisce o
+  comunque non aumenta con in altri ad esempio fifo.
+
+  gli algoritmi che non soffrono dell'anomalia di belady sono : l'algoritmo
+  ottimo e lru, tutti gli algoritmo che non ne soffrono sono detti algoritmi
+  a stack .
+
+  <\question>
+    <with|font-series|bold|<label|docs-internal-guid-c82e52f1-7fff-8dd1-4395-ed479afc9532>Si
+    descrivano gli scheduler di CPU UNIX tradizionale e Windows,
+    evidenziandone in modo comparativo i vantaggi e gli svantaggi.>
+  </question>
+
+  lo scheduler unix tradizionale quindi svr3 , è composto da code di diversa
+  prorità il livello delle code va da 20 a -19 , dove 20 è il livello con la
+  priorità più basse e -19 è il livello di priorità massima per le
+  applicazione che rientrano da uno swap out.
+
+  L'esecuzione nelle code è RR e il quanto di tempo che un processo ha a
+  disposizione è in base al suo livello di priorità .
+
+  La priorità viene calcolata oeriodicamente con la formula\ 
+
+  <\eqnarray*>
+    <tformat|<table|<row|<cell|P>|<cell|=>|<cell|base+f<around*|(|cpu
+    usage|)>+nice>>>>
+  </eqnarray*>
+
+  dove base è un valore impostato dal SO e nice è un paramentro che possiamo
+  modificare e va ad aumentare o abbassare la bonta di un processo , la nice
+  può essere anche negativa , una nice positiva peggiora la priorità
+  effettiva di un programma , una nice negativa aumenta il livello di
+  priorità
+
+  nella versione svr4 i livelli di priorita diventano 159 e vengono divisi in
+  Real time 159-100 , 99-50 kernel e 49-0 time sharing , il kernel nel caso
+  di fosse un processo con priotià real time può essere preemptato a patto
+  che si trovi in dei safe places , l'assegnazione della priorità è la
+  medesima di svr3
+
+  nello standard posix le code diventano 100 da 99 che è realtime a 0 che è
+  time sharing , in questo standard la nice di un processo ha effetto solo
+  tra processi dello stesso gruppo , quindi processi di priorità diverse ma
+  con nice diverse ,la nice diventa una don't care e importerà solo il numero
+  di piroità. Si aggiunge il concetto di epoca di schedulig quindi dato
+  l'insieme dei processi ready , in base alla priotià di ogni processo viene
+  dato un tick di tempo ad ognuno , cosi ogni processo esegue in cpu per un
+  periodo di tempo , se nasce un thread figlio esso ricevera parte del tick
+  del padre.
+
+  Lo scheduler windows è uno shceduler nativamente multithread esso \ ha 32
+  livelli di priortà da 0-15 variable e 16-32 realtime , i thread inseriti
+  nella sezione variable possono muoversi di coda , se prerilasciano la cpu
+  aumentano di coda fino ad arrivare a 15, se invece vengono rilasciati in
+  seguito ad un interrupt da timer allora scenderanno di priorità. i thread
+  nella sesione realtime non possono cambiare coda a meno che non si chiamino
+  syscall specifiche.
+
+  <\question>
+    <with|font-series|bold|<label|docs-internal-guid-9e84224d-7fff-5181-e062-4defeed2224b>Descrivere
+    le caratteristiche salienti del file-system Windows.>
+  </question>
+
+  dato una partizione che ha come file system ntfs , la memoria sara divis in
+  tre dove in una risiede la mft in una una per i file di sistema dove sono
+  presenti le bitmap per l'occupazione dei blocchi e per i file di log ed
+  infine una zona per i blocchi liberi o occupati.
+
+  per ogni volume si ha una mster file table , la master file table un po
+  come un inode contiene le informaziondi di un file , dal suo nome , i suoi
+  attributi di sicurezza e gli indici per i blocchi.
+
+  per file molto piccoli è possibile che i dati vegano salvati direttramente
+  in essa , si dicono file immediati.
+
+  gli attribti presenti sono :\ 
+
+  <\itemize>
+    <item>le infomazioni standard
+
+    <item>Descrittore di sircurezza
+
+    <item>nome
+
+    <item>dati/puntatori ai blocchi di memoria\ 
+
+    <item>lista di attributi
+  </itemize>
+
+  le acl su windows sono composte da due parti :
+
+  <\itemize>
+    <item>dacl specifica i permessi di accesso\ 
+
+    <item>sacl\ 
+  </itemize>
+
+  <\question>
+    <with|font-series|bold|<label|docs-internal-guid-a4fb8588-7fff-ba1d-aa4e-9b54fe305297>Descrivere
+    l'algoritmo F-scan per la gestione delle interazioni con i dischi a
+    rotazione.>
+  </question>
+
+  L'algoritmo fscan risolve il problema della starvation degli altri
+  algoritmo dell'ascensore in quanto se arrivano ripetutamente richieste
+  nelle vicinanze della testina , essa rimane incollata in quella zona e la
+  richiesta distante , rimarrà in attesa di essere soffisfatta.
+
+  fscan introduce due code una attiva e una di attesa , all'arrivo delle
+  richieste , vengono accolte nella lista di attesa , in un sencondo momento
+  verranno spostate nella coda arriva dove verranno riodinate come per gli
+  altri argoritmi sstf cscan o scan . dove sstf mi sposto in base alla
+  richiesta più vicina alla posizione corrente , scan funziona come un
+  ascensore ovvero soddisfa tutte le richieste da un punto o a alla fine e
+  quando arriva alla fine soddisfa tutte le richieste fino a 0 , le zone che
+  vengono maggiormente coperte sono quelle centrali , mentre cscan soddisfa
+  tutte le richiesta verso una direzione e quando arriva alla fine riparte
+  dall'inizio.
+
+  <\question>
+    <with|font-series|bold|<label|docs-internal-guid-2e30d19d-7fff-c6b6-ab18-405dc7e72301>Si
+    consideri un insieme di N processi (P0, P1, P2, P3, ..., PN-1), ed una
+    memoria condivisa M composta da N slot. Ogni processo Pi legge
+    esclusivamente dallo slot M[i] della memoria condivisa. Un ulteriore
+    processo PROD produce messaggi per i processi (P0, P1, P2, P3, ..., PN-1)
+    e li scrive negli slot della memoria condivisa M. Ogni processo Pi è
+    abilitato a leggere il suo messaggio solo dopo che tutti i messaggi
+    destinati ai diversi processi in (PO, P1, P2, P3, ..., PN-1) siano stati
+    scritti da PROD. D'altro canto, PROD può scrivere nuovi messaggi solo
+    dopo che ogni processo in (P0, P1, P2, P3, \<ldots\>. PN- 1) abbia letto
+    l'ultimo messaggio scritto da PROD destinato ad esso. Si schematizzi la
+    soluzione del suddetto problema di sincronizzazione, usando solo
+    semafori, fornendo lo pseudo-codice delle procedure SCRIVI e LEGGI usate,
+    rispettivamente, da PROD e da ciascuno dei processi Pi.>
+  </question>
+
+  <\code>
+    sem_t datiPronti[N] //init {0}\ 
+
+    sem_t datiLetti //init = N\ 
+
+    \;
+
+    scrivi:
+
+    while(1):
+
+    wait(datiLetti,N)
+
+    for i in 0,N-1:
+
+    write(m[i]);
+
+    \;
+
+    for i in 0 n-1:
+
+    signal(datiPronti[i],1);
+
+    \;
+
+    Leggi:
+
+    wait(datiPronti[i],1)
+
+    signal(datiLetti,1)
+  </code>
+
+  <\question>
+    <with|font-series|bold|<label|docs-internal-guid-ba84c651-7fff-a40c-81be-75573d64147d>Descrivere
+    il metodo di accesso sequenziale. Inoltre, dato un file system con metodo
+    di accesso sequenziale e metodo di allocazione contigua, il cui
+    dispositivo di memoria di massa abbia blocchi di taglia pari a 1 M record
+    e tempo di accesso al blocco pari a 10 millisecondi, si determini il
+    tempo massimo di accesso ad un qualsiasi record di un file sequenziale F
+    costituito da 3,5 M record. Si assuma che il record di sistema che tiene
+    traccia dell'esistenza del file F sia a sua volta caricabile in memoria
+    tramite il caricamento di un unico blocco di dispositivo, che il costo
+    per le operazioni a livello del software per la gestione dell'accesso al
+    file F sia trascurabile, così come sia trascurabile il costo per la
+    gestione degli interrupt.>
+  </question>
+
+  Il metodo di accesso sequeziale non ci permette di saltare da un altro
+  record, dato un file accederemo dall'inizio e se dovbbiamo arrivare ad un
+  informazione dobbiamo accedere ogni record che ci separa, il
+  riposizionamento è consentito ma solo all'inizio del file , un po come un
+  nastro di una cassetta , per arrivare ad un informazione specifica dovevo
+  girare tutto il nastro.
+
   \;
+
+  dato il file composto da 3.5 M record ci serviranno 4 blocchi , il tempo
+  massimo quindi è dato dal tempo di accesso al record di sistema più 4 volte
+  il tempo di accesso al blocco.
+
+  <\question>
+    <with|font-series|bold|<label|docs-internal-guid-7467028c-7fff-89e1-3345-41cc3f612b6e>Descrivere
+    la tecnica della segmentazione.>
+  </question>
+
+  Dato un address space lo dividiamo in sezioni, la segmentazione non soffre
+  di frammentazione interna in quanto porto in memoria sesioni di grandezza
+  differente , mentre pero soffre di frammentazione esterna in quanto
+  potremmo trovarci con buchi non riempibili.
+
+  Dato un indirizzo andremo nella tabella dei descrittori di segmento e con
+  il numero di segmento e l'offset verificheremo se l'indirizzo richiesto è
+  minore del limite del segmento se cio non è vero vi è un interruzione al
+  sistema operativo. L'uso delle tabella dei descrittori di segmento di
+  svincola da un insierimento continguo in memoria dei segmenti.
+
+  Per ridurre la frammentazione interna si utilizza la tecnica della
+  <strong|segmentazione paginata>, che combina i vantaggi della segmentazione
+  e della paginazione.<next-line>Dato un indirizzo logico composto da
+  <strong|numero di segmento> e <strong|offset>, si utilizza il numero di
+  segmento per accedere alla <strong|tabella dei descrittori di segmento>.
+  Nella entry relativa troviamo l'indirizzo della <strong|tabella delle
+  pagine associata al segmento> e il <strong|limite del
+  segmento>.<next-line>Si verifica che l'offset sia minore del limite del
+  segmento. Successivamente l'offset viene suddiviso in <strong|numero di
+  pagina> e <strong|offset all'interno della pagina>.<next-line>Utilizzando
+  il numero di pagina si accede alla tabella delle pagine del segmento e si
+  recupera il <strong|numero del frame fisico> corrispondente. Infine si
+  aggiunge l'offset della pagina al frame per ottenere l'<strong|indirizzo
+  fisico>.
+
+  \;
+
+  <\question>
+    <with|font-series|bold|<label|docs-internal-guid-ca629b73-7fff-3858-a9ed-b04872612807>Descrivere
+    il metodo di allocazione di file basato su indicizzazione a livelli
+    multipli.>
+  </question>
+
+  Il record di sistema tiena traccia di quanti e quali blocchi sono associati
+  ad un file , i metodi di allocazione sono diversi :contigua , catena
+  indicizzata.
+
+  Il metodo di allocazione indicizzata , permette di mantenere i blocchi in
+  posizioni non continue in memoria , l'associazione blocco indirizzo si
+  trova in un indice. il problema sta nel sotto utilizzo delle risorse del rs
+  , l'indice avrà una dimensione fissa anche se il file è molto piccolo
+  dovremmo allocare un blocco di spazio , per diminuire lo spreco si utilizza
+  la tecnica di indicizzazzione a livelli multipli dove all'interno
+  dell'indice avremo n entry che ci portano a blocchi e m entry che ci
+  portano ad altri blocchi di indici , questo permette la scalabilità del
+  sistema cosi , facendo possiamo aumentare il numero di dati mantenuti.
+
+  <with|font-series|bold|<label|docs-internal-guid-838970f0-7fff-9e1e-675f-27af7e411785>Si
+  consideri un file di dati F di 2048 record ed un dispositivo di
+  memorizzazione di massa con blocchi di 256 record avente tempo di accesso
+  ai blocchi fisso pari a 30\<mu\>s. Supponendo che (i) gli indici abbiano
+  taglia pari ad un record, (ii) gli indici di primo livello siano 6, e
+  quelli di secondo livello siano 2, (iii) il tempo di identificazione di un
+  riferimento ad un blocco di dispositivo sia costante e pari a 5\<mu\>s,
+  calcolare il tempo per la lettura di tutto il file F.>
+
+  <\eqnarray*>
+    <tformat|<table|<row|<cell|<frac|2048|256>>|<cell|=>|<cell|8 blocchi
+    necessari>>>>
+  </eqnarray*>
+
+  6 di 8 blocchi sono mantenuti da indici diretti quindi il tempo di accesso\ 
+
+  <math|6\<cdot\><around*|(|5+30|)>+<around*|(|5+30|)>+2\<cdot\><around*|(|5+30|)>>
+
+  poiche abbimo un ritardo per i 6 blocchi , poi un altro per accedere al
+  blocco di indici e altri due per accedere ai blocchi\ 
+
+  <\question>
+    Si descrivano il partizionamento dinamico della memoria e le relative
+    tecniche di gestione.
+  </question>
+
+  il parizionamento dinamico della memoria risolve il problema della
+  frammentazione interna del pratizionamento statico nel quale dividevamo la
+  memoria in partizioni di taglia diversa , un processo poteva essere
+  inserito in una di queste partizioni e generalmente la sua dimensione era
+  minore rispetto alla taglia della sezione , cosi facendo avevamo dei buchi
+  di memoria inutilizzati.
+
+  Con l'uso del partizionamento dinamico invece portiamo in memoria i blocchi
+  dati di un processo che ha dimensione variabile , eliminaimo quindi il
+  problema della frammentazione interna ma ci rimane il problema della
+  frammentazione esterna , poiche al tempo t=0 nel caso i processi \ nascano
+  tutti nello stesso tempo infinitesimo, avremo una memoria compatta, con il
+  passare del tempo i processi finiscono , vengono swappati . ci troviamo
+  quindi ad un tempo x ad avere una memoria frammentata , con dei buchi , la
+  soluzione sarebbe quella di ricompattare la memoria, se non fosse per il
+  costo a livello computazionale e di tempo , si opta quindi per delle
+  tecniche di insrimento dei blocchi , dato un nuovo blocco da inserire si
+  segue una di queste idicazioni:
+
+  <\itemize>
+    <item>fristi fit, scandendo la memoria il primo buco che contiene il
+    blocco , lo inserico all'intero\ 
+
+    <item>worst fit , inserisco il blocco nel buco più grande che ho
+
+    <item>bestfit , scandisco la memoria e inserisco il blocco nel buco che
+    lo contiene quasi o esattamente , cosi da ridurre al minimo l'ulterirore
+    frammentazione.
+  </itemize>
+
+  \ 
+
+  \ 
 </body>
 
 <\initial>
@@ -911,19 +1291,30 @@
 <\references>
   <\collection>
     <associate|auto-1|<tuple|1|1>>
-    <associate|auto-10|<tuple|<with|mode|<quote|math>|\<bullet\>>|?>>
-    <associate|auto-11|<tuple|<with|mode|<quote|math>|\<bullet\>>|?>>
-    <associate|auto-12|<tuple|<with|mode|<quote|math>|\<bullet\>>|?>>
-    <associate|auto-13|<tuple|<with|mode|<quote|math>|\<bullet\>>|?>>
-    <associate|auto-14|<tuple|<with|mode|<quote|math>|\<bullet\>>|?>>
+    <associate|auto-10|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|auto-11|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|auto-12|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|auto-13|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|auto-14|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|auto-15|<tuple|<with|mode|<quote|math>|\<bullet\>>|?>>
     <associate|auto-2|<tuple|4|3>>
     <associate|auto-3|<tuple|8|4>>
-    <associate|auto-4|<tuple|11|?>>
-    <associate|auto-5|<tuple|3|?>>
-    <associate|auto-6|<tuple|<with|mode|<quote|math>|\<bullet\>>|?>>
-    <associate|auto-7|<tuple|<with|mode|<quote|math>|\<bullet\>>|?>>
-    <associate|auto-8|<tuple|17|?>>
-    <associate|auto-9|<tuple|<with|mode|<quote|math>|\<bullet\>>|?>>
+    <associate|auto-4|<tuple|11|6>>
+    <associate|auto-5|<tuple|3|9>>
+    <associate|auto-6|<tuple|<with|mode|<quote|math>|\<bullet\>>|9>>
+    <associate|auto-7|<tuple|<with|mode|<quote|math>|\<bullet\>>|9>>
+    <associate|auto-8|<tuple|17|10>>
+    <associate|auto-9|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|docs-internal-guid-1cc83bb1-7fff-0396-ec16-4b5ea1b2ebbf|<tuple|<with|mode|<quote|math>|\<bullet\>>|?>>
+    <associate|docs-internal-guid-2e30d19d-7fff-c6b6-ab18-405dc7e72301|<tuple|22|?>>
+    <associate|docs-internal-guid-7467028c-7fff-89e1-3345-41cc3f612b6e|<tuple|24|?>>
+    <associate|docs-internal-guid-838970f0-7fff-9e1e-675f-27af7e411785|<tuple|25|?>>
+    <associate|docs-internal-guid-9e84224d-7fff-5181-e062-4defeed2224b|<tuple|20|?>>
+    <associate|docs-internal-guid-a4fb8588-7fff-ba1d-aa4e-9b54fe305297|<tuple|21|?>>
+    <associate|docs-internal-guid-acb70891-7fff-f8cc-40e9-bb6813774274|<tuple|18|?>>
+    <associate|docs-internal-guid-ba84c651-7fff-a40c-81be-75573d64147d|<tuple|23|?>>
+    <associate|docs-internal-guid-c82e52f1-7fff-8dd1-4395-ed479afc9532|<tuple|19|?>>
+    <associate|docs-internal-guid-ca629b73-7fff-3858-a9ed-b04872612807|<tuple|25|?>>
   </collection>
 </references>
 
@@ -942,6 +1333,50 @@
       <with|par-left|<quote|2tab>|Esame 21 06 2021
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-3>>
+
+      <with|par-left|<quote|2tab>|stesso giorno ma da 9 cfu
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-4>>
+
+      <with|par-left|<quote|2tab>|Realizzazione Architetturale
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-5>>
+
+      <with|par-left|<quote|2tab>|Il Meccanismo della Maschera (Mask)
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-6>>
+
+      <with|par-left|<quote|2tab>|Interazione da Shell
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-7>>
+
+      <with|par-left|<quote|1tab>|1. Il problema della paginazione a livello
+      singolo <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-8>>
+
+      <with|par-left|<quote|1tab>|2. Come funziona la paginazione a livelli
+      multipli <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-9>>
+
+      <with|par-left|<quote|1tab>|3. I vantaggi nei sistemi con memoria
+      virtuale <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-10>>
+
+      <with|par-left|<quote|2tab>|A. Allocazione Sparsa (Sparse Allocation) e
+      risparmio drastico di RAM <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-11>>
+
+      <with|par-left|<quote|2tab>|B. Paginabilità delle tabelle delle pagine
+      stesse <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-12>>
+
+      <with|par-left|<quote|2tab>|C. Semplificazione dell'hardware tramite
+      tabelle a dimensione fissa <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-13>>
+
+      <with|par-left|<quote|1tab>|4. Lo svantaggio correlato e la soluzione
+      hardware <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-14>>
     </associate>
   </collection>
 </auxiliary>
